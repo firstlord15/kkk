@@ -53,8 +53,4 @@ public class User {
     @Enumerated(EnumType.STRING)
     @NotNull(message = "Role is required")
     private Role role;
-
-    public enum Role {
-        USER, ADMIN, MANAGER
-    }
 }

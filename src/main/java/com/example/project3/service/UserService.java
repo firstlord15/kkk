@@ -6,6 +6,7 @@ import java.util.Optional;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.example.project3.model.Role;
 import com.example.project3.model.User;
 import com.example.project3.repository.UserRepository;
 
@@ -19,13 +20,13 @@ public class UserService {
 
     public User registerUser(User user) {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
-        user.setRole(User.Role.USER);
+        user.setRole(Role.USER);
         return userRepository.save(user);
     }
 
     public User registerAdmin(User admin) {
         admin.setPassword(passwordEncoder.encode(admin.getPassword()));
-        admin.setRole(User.Role.ADMIN);
+        admin.setRole(Role.ADMIN);
         return userRepository.save(admin);
     }
 

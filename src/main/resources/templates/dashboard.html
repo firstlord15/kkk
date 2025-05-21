@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="layout :: layout(~{::title}, ~{::section})">
+
+<head>
+    <title>Dashboard</title>
+</head>
+
+<body>
+    <section>
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h3 class="card-title">Welcome, <span th:text="${user.fullName}"></span></h3>
+                    </div>
+                    <div class="card-body">
+                        <p>You are logged in as <span th:text="${user.position}"></span></p>
+                        <p>Your presence has been recorded at <span
+                                th:text="${#temporals.format(LocalDateTime.now(), 'HH:mm:ss')}"></span></p>
+
+                        <div class="mt-4">
+                            <a th:href="@{/profile}" class="btn btn-primary me-2">
+                                <i class="bi bi-person"></i> My Profile
+                            </a>
+                            <a th:href="@{/colleagues}" class="btn btn-info">
+                                <i class="bi bi-people"></i> Colleagues
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header bg-secondary text-white">
+                        <h4 class="card-title">Quick Actions</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <a th:href="@{/profile}" class="btn btn-outline-primary">
+                                <i class="bi bi-pencil"></i> Edit Profile
+                            </a>
+                            <a th:href="@{/colleagues}" class="btn btn-outline-info">
+                                <i class="bi bi-people"></i> View Colleagues
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</body>
+
+</html>

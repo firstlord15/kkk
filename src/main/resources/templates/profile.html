@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="layout :: layout(~{::title}, ~{::section})">
+
+<head>
+    <title>My Profile</title>
+</head>
+
+<body>
+    <section>
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h3 class="card-title">My Profile</h3>
+                    </div>
+                    <div class="card-body">
+                        <form th:action="@{/profile}" th:object="${user}" method="post">
+                            <div class="mb-3">
+                                <label for="fullName" class="form-label">Full Name</label>
+                                <input type="text" class="form-control" id="fullName" th:field="*{fullName}" required>
+                                <div th:if="${#fields.hasErrors('fullName')}" class="text-danger"
+                                    th:errors="*{fullName}"></div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="position" class="form-label">Position</label>
+                                <input type="text" class="form-control" id="position" th:field="*{position}" required>
+                                <div th:if="${#fields.hasErrors('position')}" class="text-danger"
+                                    th:errors="*{position}"></div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="email" th:field="*{email}" readonly>
+                            </div>
+                            <div class="mb-3">
+                                <label for="phoneNumber" class="form-label">Phone Number</label>
+                                <input type="tel" class="form-control" id="phoneNumber" th:field="*{phoneNumber}"
+                                    required>
+                                <div th:if="${#fields.hasErrors('phoneNumber')}" class="text-danger"
+                                    th:errors="*{phoneNumber}"></div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="password" class="form-label">New Password (leave blank to keep
+                                    current)</label>
+                                <input type="password" class="form-control" id="password" th:field="*{password}">
+                                <div th:if="${#fields.hasErrors('password')}" class="text-danger"
+                                    th:errors="*{password}"></div>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Update Profile</button>
+                            <a th:href="@{/dashboard}" class="btn btn-secondary ms-2">Cancel</a>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header bg-secondary text-white">
+                        <h4 class="card-title">Account Information</h4>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Role:</strong> <span th:text="${user.role}"></span></p>
+                        <p><strong>Last Login:</strong> <span
+                                th:text="${#temporals.format(LocalDateTime.now(), 'yyyy-MM-dd HH:mm')}"></span></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</body>
+
+</html>

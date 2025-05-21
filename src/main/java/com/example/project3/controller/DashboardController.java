@@ -1,8 +1,8 @@
 package com.example.project3.controller;
 
-import com.example.officeapp.model.User;
-import com.example.officeapp.service.PresenceService;
-import com.example.officeapp.service.UserService;
+import com.example.project3.model.User;
+import com.example.project3.service.PresenceService;
+import com.example.project3.service.UserService;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;

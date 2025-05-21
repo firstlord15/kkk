@@ -11,10 +11,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import com.example.officeapp.model.PresenceRecord;
-import com.example.officeapp.model.User;
-import com.example.officeapp.service.PresenceService;
-import com.example.officeapp.service.UserService;
+import com.example.project3.model.PresenceRecord;
+import com.example.project3.model.User;
+import com.example.project3.service.PresenceService;
+import com.example.project3.service.UserService;
 
 @Controller
 @RequestMapping("/admin")
@@ -56,7 +56,7 @@ public class AdminController {
         if (period == null) {
             period = "day";
         }
-        
+
         return switch (period) {
             case "week" -> now.minusWeeks(1);
             case "month" -> now.minusMonths(1);
