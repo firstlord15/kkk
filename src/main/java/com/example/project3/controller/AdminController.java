@@ -3,6 +3,8 @@ package com.example.project3.controller;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
@@ -19,9 +21,12 @@ import com.example.project3.model.User;
 import com.example.project3.service.PresenceService;
 import com.example.project3.service.UserService;
 
+@Slf4j
 @Controller
 @RequestMapping("/admin")
+@PreAuthorize("hasRole('ADMIN')")
 public class AdminController {
+
     private final UserService userService;
     private final PresenceService presenceService;
 
@@ -32,53 +37,125 @@ public class AdminController {
 
     @GetMapping
     public String adminDashboard(@AuthenticationPrincipal UserDetails userDetails, Model model) {
-        String email = userDetails.getUsername();
-        User admin = userService.findByEmail(email).orElseThrow();
-        model.addAttribute("admin", admin);
-        return "admin/dashboard";
+        try {
+            log.info("Admin dashboard accessed by: {}", userDetails.getUsername());
+
+            String email = userDetails.getUsername();
+            User admin = userService.findByEmail(email)
+                    .orElseThrow(() -> new RuntimeException("Admin user not found: " + email));
+
+            log.debug("Admin user found: {}", admin.getFullName());
+
+            model.addAttribute("admin", admin);
+
+            // Добавляем статистику
+            List<User> allUsers = userService.getAllUsers();
+            List<PresenceRecord> todayRecords = getTodayPresenceRecords();
+
+            model.addAttribute("totalUsers", allUsers.size());
+            model.addAttribute("todayCheckIns", todayRecords.size());
+
+            log.info("Admin dashboard loaded successfully for: {}", admin.getEmail());
+            return "admin/dashboard";
+
+        } catch (Exception e) {
+            log.error("Error loading admin dashboard for user {}: {}", userDetails.getUsername(), e.getMessage(), e);
+            model.addAttribute("error", "Error loading admin dashboard: " + e.getMessage());
+            return "error";
+        }
     }
 
     @GetMapping("/users")
-    public String listUsers(Model model) {
-        List<User> users = userService.getAllUsers();
-        model.addAttribute("users", users);
-        return "admin/users";
+    public String listUsers(Model model, @AuthenticationPrincipal UserDetails userDetails) {
+        try {
+            log.info("Admin users page accessed by: {}", userDetails.getUsername());
+
+            List<User> users = userService.getAllUsers();
+            model.addAttribute("users", users);
+
+            log.debug("Loaded {} users for admin view", users.size());
+            return "admin/users";
+
+        } catch (Exception e) {
+            log.error("Error loading users list: {}", e.getMessage(), e);
+            model.addAttribute("error", "Error loading users: " + e.getMessage());
+            return "admin/dashboard";
+        }
     }
 
     @GetMapping("/reports")
-    public String showReports(@RequestParam(required = false) String period, Model model) {
-        LocalDateTime now = LocalDateTime.now();
-        LocalDateTime startDate = calculateStartDate(period, now);
-        List<PresenceRecord> records = presenceService.getPresenceRecordsBetween(startDate, now);
-        model.addAttribute("records", records);
-        model.addAttribute("period", period != null ? period : "day");
-        return "admin/reports";
+    public String showReports(@RequestParam(required = false) String period, Model model, @AuthenticationPrincipal UserDetails userDetails) {
+        try {
+            log.info("Admin reports page accessed by: {} with period: {}", userDetails.getUsername(), period);
+
+            LocalDateTime now = LocalDateTime.now();
+            LocalDateTime startDate = calculateStartDate(period, now);
+
+            List<PresenceRecord> records = presenceService.getPresenceRecordsBetween(startDate, now);
+
+            model.addAttribute("records", records);
+            model.addAttribute("period", period != null ? period : "day");
+
+            log.debug("Loaded {} presence records for period: {}", records.size(), period);
+            return "admin/reports";
+
+        } catch (Exception e) {
+            log.error("Error loading reports: {}", e.getMessage(), e);
+            model.addAttribute("error", "Error loading reports: " + e.getMessage());
+            return "admin/dashboard";
+        }
     }
 
     @PostMapping("/reports/update/{id}")
-    public String updateRecord(@PathVariable Long id,
-                               @RequestParam String entryTime,
-                               @RequestParam(required = false) String exitTime,
-                               RedirectAttributes redirectAttributes) {
+    public String updateRecord(@PathVariable Long id, @RequestParam String entryTime, @RequestParam(required = false) String exitTime, RedirectAttributes redirectAttributes, @AuthenticationPrincipal UserDetails userDetails) {
         try {
-            PresenceRecord record = presenceService.getPresenceRecordById(id).orElseThrow();
+            log.info("Updating presence record {} by admin: {}", id, userDetails.getUsername());
 
-            // Установка времени входа
-            if (entryTime != null && !entryTime.isEmpty()) {
-                record.setEntryTime(LocalDateTime.parse(entryTime));
+            PresenceRecord record = presenceService.getPresenceRecordById(id)
+                    .orElseThrow(() -> new RuntimeException("Presence record not found with id: " + id));
+
+            // Валидация и установка времени входа
+            if (entryTime != null && !entryTime.trim().isEmpty()) {
+                try {
+                    LocalDateTime entryDateTime = LocalDateTime.parse(entryTime);
+                    record.setEntryTime(entryDateTime);
+                    log.debug("Entry time updated for record {}: {}", id, entryDateTime);
+                } catch (Exception e) {
+                    throw new RuntimeException("Invalid entry time format: " + entryTime);
+                }
+            } else {
+                throw new RuntimeException("Entry time is required");
             }
 
-            // Установка времени выхода
-            if (exitTime != null && !exitTime.isEmpty()) {
-                record.setExitTime(LocalDateTime.parse(exitTime));
+            // Установка времени выхода (опционально)
+            if (exitTime != null && !exitTime.trim().isEmpty()) {
+                LocalDateTime exitDateTime = LocalDateTime.parse(exitTime);
+
+                // Проверяем, что время выхода после времени входа
+                if (exitDateTime.isBefore(record.getEntryTime())) {
+                    throw new RuntimeException("Exit time cannot be before entry time");
+                }
+
+                record.setExitTime(exitDateTime);
+                log.debug("Exit time updated for record {}: {}", id, exitDateTime);
             } else {
                 record.setExitTime(null);
+                log.debug("Exit time cleared for record {}", id);
             }
 
+            // Помечаем запись как отредактированную вручную
+            record.setManuallyEdited(true);
+
             presenceService.updatePresenceRecord(record);
-            redirectAttributes.addFlashAttribute("success", "Запись успешно обновлена");
+
+            redirectAttributes.addFlashAttribute("success",
+                    "Record updated successfully for user: " + record.getUser().getFullName());
+
+            log.info("Presence record {} updated successfully by admin: {}", id, userDetails.getUsername());
+
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "Ошибка обновления записи: " + e.getMessage());
+            log.error("Error updating presence record {}: {}", id, e.getMessage(), e);
+            redirectAttributes.addFlashAttribute("error", "Error updating record: " + e.getMessage());
         }
 
         return "redirect:/admin/reports";
@@ -90,9 +167,24 @@ public class AdminController {
         }
 
         return switch (period) {
-            case "week" -> now.minusWeeks(1);
-            case "month" -> now.minusMonths(1);
-            default -> now.withHour(0).withMinute(0).withSecond(0); // today
+            case "week" -> {
+                log.debug("Calculating start date for week period");
+                yield now.minusWeeks(1);
+            }
+            case "month" -> {
+                log.debug("Calculating start date for month period");
+                yield now.minusMonths(1);
+            }
+            default -> {
+                log.debug("Calculating start date for day period (default)");
+                yield now.withHour(0).withMinute(0).withSecond(0).withNano(0);
+            }
         };
+    }
+
+    private List<PresenceRecord> getTodayPresenceRecords() {
+        LocalDateTime startOfDay = LocalDateTime.now().withHour(0).withMinute(0).withSecond(0).withNano(0);
+        LocalDateTime endOfDay = LocalDateTime.now().withHour(23).withMinute(59).withSecond(59).withNano(999999999);
+        return presenceService.getPresenceRecordsBetween(startOfDay, endOfDay);
     }
 }

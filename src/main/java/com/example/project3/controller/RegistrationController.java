@@ -6,6 +6,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.example.project3.model.User;
 import com.example.project3.service.UserService;
@@ -27,8 +28,12 @@ public class RegistrationController {
     }
 
     @PostMapping("/register")
-    public String registerUser(@Valid @ModelAttribute("user") User user, BindingResult result) {
+    public String registerUser(@Valid @ModelAttribute("user") User user, BindingResult result, Model model, RedirectAttributes redirectAttributes) {
         if (result.hasErrors()) {
+            System.out.println("Validation errors found:");
+            result.getAllErrors().forEach(error ->
+                    System.out.println("Error: " + error.getDefaultMessage())
+            );
             return "register";
         }
 
@@ -42,7 +47,17 @@ public class RegistrationController {
             return "register";
         }
 
-        userService.registerUser(user);
-        return "redirect:/login?registered";
+        try {
+            User savedUser = userService.registerUser(user);
+            System.out.println("User registered successfully: " + savedUser.getEmail());
+
+            redirectAttributes.addFlashAttribute("success", "Регистрация прошла успешно! Теперь вы можете войти в систему.");
+            return "redirect:/login?registered";
+
+        } catch (Exception e) {
+            System.err.println("Error during user registration: " + e.getMessage());
+            model.addAttribute("error", "Произошла ошибка при регистрации. Попробуйте еще раз.");
+            return "register";
+        }
     }
 }

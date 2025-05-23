@@ -25,32 +25,62 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank(message = "Username is required")
+    @NotBlank(message = "Имя пользователя обязательно")
+    @Size(min = 3, max = 50, message = "Имя пользователя должно содержать от 3 до 50 символов")
     @Column(unique = true)
     private String username;
 
-    @NotBlank(message = "Full name is required")
-    @Size(max = 100, message = "Full name must be less than 100 characters")
+    @NotBlank(message = "Полное имя обязательно")
+    @Size(min = 2, max = 100, message = "Полное имя должно содержать от 2 до 100 символов")
     private String fullName;
 
-    @NotBlank(message = "Position is required")
-    @Size(max = 100, message = "Position must be less than 100 characters")
+    @NotBlank(message = "Должность обязательна")
+    @Size(min = 2, max = 100, message = "Должность должна содержать от 2 до 100 символов")
     private String position;
 
-    @NotBlank(message = "Phone number is required")
-    @Pattern(regexp = "^\\+?[0-9]{10,15}$", message = "Invalid phone number format")
+    @NotBlank(message = "Номер телефона обязателен")
+    @Pattern(regexp = "^\\+?[1-9]\\d{9,14}$", message = "Неверный формат номера телефона (10-15 цифр, может начинаться с +)")
     private String phoneNumber;
 
-    @NotBlank(message = "Email is required")
-    @Email(message = "Invalid email format")
+    @NotBlank(message = "Email обязателен")
+    @Email(message = "Неверный формат email")
+    @Size(max = 100, message = "Email не должен превышать 100 символов")
     @Column(unique = true)
     private String email;
 
-    @NotBlank(message = "Password is required")
-    @Size(min = 6, message = "Password must be at least 6 characters")
+    @NotBlank(message = "Пароль обязателен")
+    @Size(min = 6, max = 100, message = "Пароль должен содержать от 6 до 100 символов")
     private String password;
 
     @Enumerated(EnumType.STRING)
-    @NotNull(message = "Role is required")
+    @NotNull(message = "Роль пользователя обязательна")
     private Role role;
+
+    // Конструктор по умолчанию
+    public User() {
+        // Устанавливаем роль по умолчанию
+        this.role = Role.USER;
+    }
+
+    // Конструктор с параметрами (опционально)
+    public User(String username, String fullName, String position, String phoneNumber, String email, String password) {
+        this.username = username;
+        this.fullName = fullName;
+        this.position = position;
+        this.phoneNumber = phoneNumber;
+        this.email = email;
+        this.password = password;
+        this.role = Role.USER;
+    }
+
+    @Override
+    public String toString() {
+        return "User{" +
+                "id=" + id +
+                ", username='" + username + '\'' +
+                ", fullName='" + fullName + '\'' +
+                ", email='" + email + '\'' +
+                ", role=" + role +
+                '}';
+    }
 }
