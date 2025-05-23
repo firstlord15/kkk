@@ -18,10 +18,10 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(AbstractHttpConfigurer::disable)
+                .csrf(AbstractHttpConfigurer::disable) // Отключаем CSRF для API
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/home", "/login", "/register", "/registration", "/error",
-                                "/css/**", "/js/**", "/images/**", "/h2-console/**",
+                        .requestMatchers("/", "/home", "/login", "/register", "/error", "/test",
+                                "/css/**", "/js/**", "/images/**",
                                 "/swagger-ui/**", "/api-docs/**").permitAll()
                         .requestMatchers("/api/users/**").hasRole("ADMIN")
                         .requestMatchers("/api/presence/**").hasRole("ADMIN")

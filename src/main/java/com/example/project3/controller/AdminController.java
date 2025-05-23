@@ -8,8 +8,11 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.example.project3.model.PresenceRecord;
 import com.example.project3.model.User;
@@ -50,6 +53,35 @@ public class AdminController {
         model.addAttribute("records", records);
         model.addAttribute("period", period != null ? period : "day");
         return "admin/reports";
+    }
+
+    @PostMapping("/reports/update/{id}")
+    public String updateRecord(@PathVariable Long id,
+                               @RequestParam String entryTime,
+                               @RequestParam(required = false) String exitTime,
+                               RedirectAttributes redirectAttributes) {
+        try {
+            PresenceRecord record = presenceService.getPresenceRecordById(id).orElseThrow();
+
+            // Установка времени входа
+            if (entryTime != null && !entryTime.isEmpty()) {
+                record.setEntryTime(LocalDateTime.parse(entryTime));
+            }
+
+            // Установка времени выхода
+            if (exitTime != null && !exitTime.isEmpty()) {
+                record.setExitTime(LocalDateTime.parse(exitTime));
+            } else {
+                record.setExitTime(null);
+            }
+
+            presenceService.updatePresenceRecord(record);
+            redirectAttributes.addFlashAttribute("success", "Запись успешно обновлена");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Ошибка обновления записи: " + e.getMessage());
+        }
+
+        return "redirect:/admin/reports";
     }
 
     private LocalDateTime calculateStartDate(String period, LocalDateTime now) {

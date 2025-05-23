@@ -2,6 +2,7 @@ package com.example.project3.service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 
@@ -28,6 +29,10 @@ public class PresenceService {
 
     public List<PresenceRecord> getPresenceRecordsBetween(LocalDateTime start, LocalDateTime end) {
         return presenceRecordRepository.findByEntryTimeBetween(start, end);
+    }
+
+    public Optional<PresenceRecord> getPresenceRecordById(Long id) {
+        return presenceRecordRepository.findById(id);
     }
 
     public PresenceRecord updatePresenceRecord(PresenceRecord record) {
