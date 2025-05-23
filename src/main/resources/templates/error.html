@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -13,6 +13,12 @@
         <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
             <div class="container">
                 <a class="navbar-brand" th:href="@{/}"> <i class="bi bi-building me-2"></i>Office App </a>
+                <div class="navbar-nav ms-auto">
+                    <!-- Для авторизованных пользователей -->
+                    <a class="nav-link" th:href="@{/dashboard}" sec:authorize="isAuthenticated()"> <i class="bi bi-house me-1"></i>Dashboard </a>
+                    <!-- Для НЕавторизованных пользователей -->
+                    <a class="nav-link" th:href="@{/login}" sec:authorize="!isAuthenticated()"> <i class="bi bi-box-arrow-in-right me-1"></i>Войти </a>
+                </div>
             </div>
         </nav>
 
@@ -39,8 +45,17 @@
                             </div>
 
                             <div class="mt-4">
-                                <a th:href="@{/}" class="btn btn-primary me-2"> <i class="bi bi-house me-2"></i>На главную </a>
-                                <a th:href="@{/login}" class="btn btn-outline-primary"> <i class="bi bi-box-arrow-in-right me-2"></i>Войти </a>
+                                <!-- Для авторизованных пользователей -->
+                                <div sec:authorize="isAuthenticated()">
+                                    <a th:href="@{/dashboard}" class="btn btn-primary me-2"> <i class="bi bi-house me-2"></i>В Dashboard </a>
+                                    <a th:href="@{/}" class="btn btn-outline-primary"> <i class="bi bi-arrow-left me-2"></i>На главную </a>
+                                </div>
+
+                                <!-- Для НЕавторизованных пользователей -->
+                                <div sec:authorize="!isAuthenticated()">
+                                    <a th:href="@{/}" class="btn btn-primary me-2"> <i class="bi bi-house me-2"></i>На главную </a>
+                                    <a th:href="@{/login}" class="btn btn-outline-primary"> <i class="bi bi-box-arrow-in-right me-2"></i>Войти </a>
+                                </div>
                             </div>
                         </div>
                     </div>
